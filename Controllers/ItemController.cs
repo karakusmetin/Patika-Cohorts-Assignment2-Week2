@@ -6,6 +6,8 @@ using Newtonsoft.Json;
 using System.Xml.Linq;
 using System;
 using GameItems.Entities;
+using GameItems.Dto;
+using GameItems.Data;
 
 namespace GameItems.Controllers
 {
@@ -13,17 +15,17 @@ namespace GameItems.Controllers
 	[ApiController]
 	public class ItemController : ControllerBase
 	{
-		private readonly List<Item> items = new()
-		{
-			new Item{ Id= 0, Name="Sword",Price = 9, Description="Basic Weapon" },
-			new Item{ Id= 1, Name="Sytche",Price = 20, Description = "Magical weapon" },
-			new Item{ Id= 2, Name="Shield",Price = 19, Description = "Basic Armor" }
-		};
+		private readonly IItemsInterface items;
 
+		public ItemController(IItemsInterface items)
+		{
+			this.items = items;
+		}
 		[HttpGet]
 		public ActionResult<IEnumerable<Item>> Get()
 		{
-			return Ok(items);
+			var result = items.GetAllItems();
+			return Ok(result);
 		}
 
 		[HttpGet("list")]
@@ -31,8 +33,8 @@ namespace GameItems.Controllers
 		{
 			if (string.IsNullOrEmpty(Name))
 				return BadRequest("İsim Boş Olamaz");
-			
-			var itemList = items.Where(x => x.Name.Contains(Name, StringComparison.OrdinalIgnoreCase)).ToList();
+
+			var itemList = items.NameOfList(Name);
 			if (itemList.Count == 0)
 				return NotFound("İtem Listesi Bulunamadı");
 			else
@@ -42,69 +44,76 @@ namespace GameItems.Controllers
 			
 		}
 
-		[HttpGet("sort")]
-		public IActionResult GetSortedProducts([FromQuery] string sortBy)
-		{
-			if (string.IsNullOrEmpty(sortBy))
-			{
-				return BadRequest("Boş bırakılamaz");
-			}
+		//[HttpGet("sort")]
+		//public IActionResult GetSortedProducts([FromQuery] string sortBy)
+		//{
+		//	if (string.IsNullOrEmpty(sortBy))
+		//	{
+		//		return BadRequest("Boş bırakılamaz");
+		//	}
 
-			switch (sortBy.ToLower())
-			{
-				case "name":
-					return Ok(items.OrderBy(p => p.Name).ToList());
-				case "price":
-					return Ok(items.OrderBy(p => p.Price).ToList());
-				default:
-					return BadRequest("Name' veya 'Price' yazılmalı.");
-			}
-		}
+		//	switch (sortBy.ToLower())
+		//	{
+		//		case "name":
+		//			return Ok(items.OrderBy(p => p.Name).ToList());
+		//		case "price":
+		//			return Ok(items.OrderBy(p => p.Price).ToList());
+		//		default:
+		//			return BadRequest("Name' veya 'Price' yazılmalı.");
+		//	}
+		//}
 
 		[HttpGet("{id}")]
 		public ActionResult<Item> GetById(int id)
 		{
-			var item = items.FirstOrDefault(i => i.Id == id);
+			Item result = items.GetItemsById(id);
 
-			if (item == null)
+			if (result == null)
 			{
 				return NotFound(); // 404 Not Found
 			}
 
-			return Ok(item);
+			return Ok(result);
 		}
 
 		// POST: api/items
 		[HttpPost]
-		public ActionResult<Item> Post([FromBody] Item newItem)
+		public ActionResult<CreateItem> Post([FromBody] CreateItem newItem)
 		{
-			newItem.Id = items.Count + 1;
-			items.Add(newItem);
+		
+			Item createItem = new()
+			{
+				Id = items.GetCount(),
+				Description = newItem.Description,
+				Name = newItem.Name,
+				Price = newItem.Price,
+			};
+			items.CrateItem(createItem);
 
-			return CreatedAtAction(nameof(GetById), new { id = newItem.Id }, newItem);
+			return Ok(createItem);
 		}
 
 		// PUT: api/items/1
 		[HttpPut("{id}")]
-		public IActionResult Put(int id, [FromBody] Item updatedItem)
+		public IActionResult Put(int id, [FromBody] UpdatedItem updatedItem)
 		{
-			var existingItem = items.FirstOrDefault(i => i.Id == id);
+			var existingItem = items.UpdatedItem(id, updatedItem);
 
 			if (existingItem == null)
 			{
 				return NotFound(); // 404 Not Found
 			}
 
-			existingItem.Name = updatedItem.Name;
+			existingItem.Price = updatedItem.Price;
 			existingItem.Description = updatedItem.Description;
 
-			return NoContent(); // 204 No Content
+			return Ok(existingItem); // 204 No Content
 		}
-		
+
 		[HttpPut("Query")]
-		public IActionResult PutQuery(int id, string Name,string Description)
+		public IActionResult PutQuery(int id, string Name, string Description)
 		{
-			var existingItem = items.FirstOrDefault(i => i.Id == id);
+			items.UpdateItem(id,)
 
 			if (existingItem == null)
 			{
@@ -121,32 +130,14 @@ namespace GameItems.Controllers
 		[HttpDelete("{id}")]
 		public IActionResult Delete(int id)
 		{
-			var itemToRemove = items.FirstOrDefault(i => i.Id == id);
 
-			items.Remove(itemToRemove);
-
-			return Ok(); 
-		}
-
-		// PATCH: api/items/1
-		[HttpPatch("{id}")]
-		public IActionResult Patch(int id, [FromBody] JsonPatchDocument<Item> patchDocument)
-		{
-			var item = items.FirstOrDefault(i => i.Id == id);
-
-			if (item == null)
+			var status = items.DeleteItem(id);
+			if (status ==true)
 			{
-				return NotFound(); // 404 Not Found
+				return Ok();
 			}
 
-			patchDocument.ApplyTo(item, ModelState);
-
-			if (!ModelState.IsValid)
-			{
-				return BadRequest(ModelState); // 400 Bad Request
-			}
-
-			return NoContent(); // 204 No Content
+			return NoContent(); 
 		}
 	}
 }

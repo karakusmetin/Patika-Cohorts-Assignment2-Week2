@@ -1,3 +1,4 @@
+using GameItems.Data;
 using GameItems.Middlewares;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -27,7 +28,7 @@ namespace GameItems
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-
+			services.AddSingleton<IItemsInterface, ItemsListRepository>();
 			services.AddControllers().AddNewtonsoftJson();
 
 			services.AddControllers();
@@ -35,6 +36,8 @@ namespace GameItems
 			{
 				c.SwaggerDoc("v1", new OpenApiInfo { Title = "GameItems", Version = "v1" });
 			});
+
+
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -53,7 +56,7 @@ namespace GameItems
 
 			app.UseAuthorization();
 
-			app.UseCustomExeptionMiddle();
+			
 
 			app.UseEndpoints(endpoints =>
 			{
