@@ -63,7 +63,7 @@ namespace GameItems
 
 			app.UseAuthorization();
 
-			//app.UseCustomExeptionMiddle();
+			app.UseCustomExeptionMiddle();
 
 			app.UseEndpoints(endpoints =>
 			{
