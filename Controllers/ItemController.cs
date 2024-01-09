@@ -8,6 +8,8 @@ using System;
 using GameItems.Entities;
 using GameItems.Dto;
 using GameItems.Data;
+using GameItems.Extensions;
+using GameItems.FakeUserLoginService;
 
 namespace GameItems.Controllers
 {
@@ -21,8 +23,9 @@ namespace GameItems.Controllers
 		{
 			this.items = items;
 		}
+
 		[HttpGet]
-		public ActionResult<IEnumerable<Item>> Get()
+		public ActionResult<IEnumerable<Item>> GetUsers()
 		{
 			var result = items.GetAllItems();
 			return Ok(result);
@@ -70,7 +73,7 @@ namespace GameItems.Controllers
 
 			if (result == null)
 			{
-				return NotFound(); // 404 Not Found
+				return NotFound();
 			}
 
 			return Ok(result);
@@ -101,32 +104,25 @@ namespace GameItems.Controllers
 
 			if (existingItem == null)
 			{
-				return NotFound(); // 404 Not Found
+				return NotFound(); 
 			}
 
-			existingItem.Price = updatedItem.Price;
-			existingItem.Description = updatedItem.Description;
-
-			return Ok(existingItem); // 204 No Content
+			return Ok(existingItem);
 		}
 
 		[HttpPut("Query")]
 		public IActionResult PutQuery(int id, string Name, string Description)
 		{
-			items.UpdateItem(id,)
+			var result = items.UpdateItemQuery(id, Name, Description);
 
-			if (existingItem == null)
+			if (result == null)
 			{
-				return NotFound(); // 404 Not Found
+				return NotFound(); 
 			}
 
-			existingItem.Name = Name;
-			existingItem.Description = Description;
-
-			return NoContent(); // 204 No Content
+			return Ok(result); 
 		}
 
-		// DELETE: api/items/1
 		[HttpDelete("{id}")]
 		public IActionResult Delete(int id)
 		{

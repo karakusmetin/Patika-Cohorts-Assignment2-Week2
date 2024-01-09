@@ -1,5 +1,6 @@
 ﻿using GameItems.Dto;
 using GameItems.Entities;
+using GameItems.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -63,6 +64,18 @@ namespace GameItems.Data
 			existingItem.Price = item.Price;
 			existingItem.Description = item.Description;
 
+			var updateditem =existingItem.AsDto();
+
+			return updateditem;
+
+		}
+
+		public UpdatedItem UpdateItemQuery(int id, string Name, string description)
+		{
+			var existingItem = items.FirstOrDefault(i => i.Id == id);
+			existingItem.Name = Name;
+			existingItem.Description = description;
+
 			UpdatedItem updatedItem = new()
 			{
 				Price = existingItem.Price,
@@ -70,7 +83,6 @@ namespace GameItems.Data
 			};
 
 			return updatedItem;
-
 		}
 	}
 }

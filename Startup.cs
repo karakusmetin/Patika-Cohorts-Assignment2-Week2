@@ -1,4 +1,5 @@
 using GameItems.Data;
+using GameItems.FakeUserLoginService;
 using GameItems.Middlewares;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -36,7 +37,13 @@ namespace GameItems
 			{
 				c.SwaggerDoc("v1", new OpenApiInfo { Title = "GameItems", Version = "v1" });
 			});
+			services.AddScoped<IFakeUserService, FakeUserService>();
+			services.AddScoped<AuthorizeFakeUserAttribute>();
 
+			services.AddControllers(options =>
+			{
+				options.Filters.Add(new AuthorizeFakeUserAttribute(services.BuildServiceProvider().GetRequiredService<IFakeUserService>()));
+			});
 
 		}
 
@@ -56,7 +63,7 @@ namespace GameItems
 
 			app.UseAuthorization();
 
-			
+			//app.UseCustomExeptionMiddle();
 
 			app.UseEndpoints(endpoints =>
 			{

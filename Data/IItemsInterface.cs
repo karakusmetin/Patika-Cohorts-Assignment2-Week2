@@ -15,5 +15,6 @@ namespace GameItems.Data
 		List<Item> NameOfList(string name);
 		int GetCount();
 		UpdatedItem UpdatedItem(int id,UpdatedItem item);
+		UpdatedItem UpdateItemQuery(int id, string Name, string description);
 	}
 }
